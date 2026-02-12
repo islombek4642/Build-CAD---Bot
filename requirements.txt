@@ -1,0 +1,8 @@
+aiogram==3.25.0
+ezdxf==1.2.0
+matplotlib==3.7.2
+Pillow==9.2.0
+requests==2.31.0
+python-dotenv==1.0.0
+jsonschema==4.17.3
+numpy==1.26.2
