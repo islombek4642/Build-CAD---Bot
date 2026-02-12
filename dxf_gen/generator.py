@@ -26,57 +26,40 @@ def create_plan(spec: Dict[str, Any], filename: str) -> str:
     _add_layer(doc, 'A-ANNO-AXES', color=8, linetype='DASHED')
     _add_layer(doc, 'A-TITLE-BLOCK', color=7)
 
-    # GOST Standards (at 1:100 Scale)
-    SCALE = 1000
-    FONT_SUB = 250    # 2.5mm
-    FONT_MAIN = 350   # 3.5mm
-    FONT_HEAD = 500   # 5.0mm
-    
-    # Define Professional Text Style
-    if 'GOST_STYLE' not in doc.styles:
-        doc.styles.new('GOST_STYLE', dxfattribs={'font': 'isocp.shx', 'width': 0.8})
-    
-    land_w_mm = float(spec.get('land_width', 10.0)) * SCALE
-    land_h_mm = float(spec.get('land_height', 10.0)) * SCALE
+    land_w_m = float(spec.get('land_width', 10.0))
+    land_h_m = float(spec.get('land_height', 10.0))
+
+    # Smarter Scaling (Level 5.7)
+    # If project fits A3 at 1:50, use it for better sheet fill
+    if land_w_m <= 15.0 and land_h_m <= 25.0:
+        sheet_w, sheet_h = 42000, 29700 # A3
+        SCALE = 2000 # 1:50 scale
+    elif land_w_m > 25.0 or land_h_m > 35.0:
+        sheet_w, sheet_h = 59400, 42000 # A2
+        SCALE = 1000 # 1:100 scale
+    else:
+        sheet_w, sheet_h = 42000, 29700 # A3
+        SCALE = 1000 # 1:100 scale
+
+    FONT_SUB = 2.5 * (SCALE/100)
+    FONT_MAIN = 3.5 * (SCALE/100)
     wall_ext = 380 
     wall_int = 120 
 
     # GOST Paper Sizes (mm)
-    PAPERS = {
-        'A4_V': (21000, 29700),
-        'A4_H': (29700, 21000),
-        'A3': (42000, 29700),
-        'A2': (59400, 42000)
-    }
-    
-    margin_l, margin_r, margin_t, margin_b = 2000, 500, 500, 500
-    sw_mm, _sh_mm = 18500, 5500
-    
-    # Auto-Selection Logic (Prefer A3 for visual balance, switch to A4 for very small or A2 for large)
-    # Available width on A3: 420 - 20 - 5 - 185 = 210mm
-    # @ 1:100 scale = 21,000mm max land width
-    
-    # Auto-Selection Logic
-    _scale = 100
-    if land_w_mm <= (21000 - 2000 - 500 - 18500 - 2000) and land_h_mm <= (29700 - 1000):
-        sheet_w, sheet_h = PAPERS['A3']
-    elif land_w_mm > 20000 or land_h_mm > 25000:
-        sheet_w, sheet_h = PAPERS['A2']
-    else:
-        sheet_w, sheet_h = PAPERS['A3'] 
+    # Define Professional Text Style
+    if 'GOST_STYLE' not in doc.styles:
+        doc.styles.new('GOST_STYLE', dxfattribs={'font': 'isocp.shx', 'width': 0.8})
 
-    # 0. Draw Sheet Frame (20/5/5/5 from edges)
+    margin_l, margin_r, margin_t, margin_b = 2000, 500, 500, 500
+    sw_mm = 18500
+
+    # Top-Left Positioning (Level 5.7)
+    offset_x = margin_l
+    offset_y = sheet_h - margin_t - (land_h_m * SCALE)
+    
     _draw_gost_frame(msp, sheet_w, sheet_h, margin_l, margin_r, margin_t, margin_b)
-    
-    # Safe area for drawing (Left of shtamp)
-    safe_w = sheet_w - margin_l - margin_r - sw_mm - 2000 # 20mm gap
-    safe_h = sheet_h - margin_b - margin_t
-    
-    offset_x = margin_l + (safe_w - land_w_mm)/2
-    offset_y = margin_b + (safe_h - land_h_mm)/2
-    
-    # 1. Grid Axes
-    _draw_pro_axes(msp, land_w_mm, land_h_mm, offset_x, offset_y)
+    _draw_pro_axes(msp, land_w_m * SCALE, land_h_m * SCALE, offset_x, offset_y)
 
     rooms = spec.get('rooms', [])
     for r in rooms:
@@ -128,10 +111,10 @@ def create_plan(spec: Dict[str, Any], filename: str) -> str:
         mtext.set_location((x+w/2, y+h/2), attachment_point=ezdxf.enums.MTextEntityAlignment.MIDDLE_CENTER)
 
     # 5. External Dimension Chains (Level 5.4)
-    _draw_gost_dimension_chains(msp, rooms, land_w_mm, land_h_mm, offset_x, offset_y)
+    _draw_gost_dimension_chains(msp, rooms, land_w_m * SCALE, land_h_m * SCALE, offset_x, offset_y)
 
     # 3. GOST Official Corner Shtamp (185x55mm)
-    _draw_gost_corner_shtamp(msp, sheet_w, margin_r, margin_b, rooms, spec, FONT_SUB, FONT_MAIN, FONT_HEAD)
+    _draw_gost_corner_shtamp(msp, sheet_w, margin_r, margin_b, rooms, spec, FONT_SUB, FONT_MAIN)
 
     doc.saveas(filename)
     return filename
@@ -200,21 +183,23 @@ def _draw_pro_opening(msp, rx, ry, rw, rh, op, wall_thick):
             msp.add_line((x, y-w/2), (x, y+w/2), dxfattribs=attr) # Outer
             msp.add_line((x+wall_thick/2 if wall=='west' else x-wall_thick/2, y-w/2), (x+wall_thick/2 if wall=='west' else x-wall_thick/2, y+w/2), dxfattribs={**attr, 'lineweight': 10})
 
-def _draw_gost_dimension_chains(msp, rooms, tw, _th, ox, oy):
-    """Implement Professional Multi-row Chains (Level 5.4)."""
+def _draw_gost_dimension_chains(msp, rooms, tw, th, ox, oy):
+    """Implement Professional Orthogonal Multi-row Chains (Level 5.8)."""
     # 1. External Bottom Chain (Distances from left frame)
     d1 = 1200 # 12mm from building
     d2 = 1900 # 19mm total (7mm gap)
     
-    # Overall Dimension
+    # Overall Dimension (Strictly Horizontal)
     _add_gost_dim(msp, (ox, oy), (ox+tw, oy), -d2, "{}".format(int(tw)))
     
-    # Internal parts
+    # Internal parts (Sorted uniquely)
     x_coords = sorted(list(set([r['x']*1000 for r in rooms] + [(r['x']+r['width'])*1000 for r in rooms])))
     for i in range(len(x_coords)-1):
         x1, x2 = x_coords[i], x_coords[i+1]
-        if x2 - x1 > 500: # ignore tiny gaps
-            _add_gost_dim(msp, (ox+x1, oy), (ox+x2, oy), -d1, "{}".format(int(x2-x1)))
+        dist = x2 - x1
+        if dist > 300: # ignore tiny gaps
+            # Force strictly horizontal dim
+            _add_gost_dim(msp, (ox+x1, oy), (ox+x2, oy), -d1, "{}".format(int(dist)))
 
 def _add_gost_dim(msp, p1, p2, dist, text):
     """Helper for GOST dimensions with Ticks."""
@@ -235,7 +220,7 @@ def _draw_pro_axes(msp, w, h, ox, oy):
     msp.add_text("1", dxfattribs={'height': 300, 'insert': (ox, oy-1500)})
     msp.add_text("A", dxfattribs={'height': 300, 'insert': (ox-1500, oy)})
 
-def _draw_gost_corner_shtamp(msp, sw, mr, mb, rooms, spec, fsub, fmain, _fhead):
+def _draw_gost_corner_shtamp(msp, sw, mr, mb, rooms, spec, fsub, fmain):
     """GOST 21.1101 Form 1 (Clean Industrial Release)."""
     w, h = 18500, 5500
     x0, y0 = sw - mr - w, mb

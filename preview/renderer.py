@@ -21,13 +21,17 @@ def render_preview(spec: Dict[str, Any], filename: str) -> str:
     land_w = float(spec.get('land_width', 10.0))
     land_h = float(spec.get('land_height', 10.0))
     
-    # Auto-Select (Match generator.py logic)
-    if land_w <= (21.0 - 2.0 - 0.5 - 18.5 - 2.0) and land_h <= (29.7 - 1.0):
+    # Auto-Select (Match generator.py logic Version 5.7)
+    if land_w <= 15.0 and land_h <= 25.0:
         sheet_w, sheet_h = PAPERS['A3']
-    elif land_w > 20.0 or land_h > 25.0:
+        SCALE_VAL = 2.0 # 1:50
+        # Re-calc sheet to A3 for preview stability
+    elif land_w > 25.0 or land_h > 35.0:
         sheet_w, sheet_h = PAPERS['A2']
+        SCALE_VAL = 1.0 # 1:100
     else:
-        sheet_w, sheet_h = PAPERS['A3'] 
+        sheet_w, sheet_h = PAPERS['A3']
+        SCALE_VAL = 1.0 # 1:100
 
     fig, ax = plt.subplots(figsize=(14, 10))
     ax.set_facecolor('white')
@@ -35,12 +39,9 @@ def render_preview(spec: Dict[str, Any], filename: str) -> str:
     # Draw Frame
     ax.add_patch(plt.Rectangle((ml, mb), sheet_w - ml - mr, sheet_h - mt - mb, fill=False, edgecolor='black', linewidth=1.5))
 
-    # GOST Centering (Safe area left of shtamp)
-    safe_w = sheet_w - ml - mr - sw_blk - 2.0
-    safe_h = sheet_h - mb - mt
-    
-    ox = ml + (safe_w - land_w)/2
-    oy = mb + (safe_h - land_h)/2
+    # Top-Left Positioning (Match Level 5.7)
+    ox = ml
+    oy = sheet_h - mt - land_h
 
     rooms = spec.get('rooms', [])
     for r in rooms:
