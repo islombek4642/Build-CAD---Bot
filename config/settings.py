@@ -27,6 +27,6 @@ DEFAULT_WALLS_THICKNESS = 0.3
 FILENAME_PREFIX = 'plan'
 
 # Schema definition constants
-ROOM_TYPES = ['bedroom', 'living_room', 'kitchen', 'bathroom', 'other']
+ROOM_TYPES = ['bedroom', 'living_room', 'kitchen', 'bathroom', 'hall', 'stairs', 'basement', 'terrace', 'balcony', 'other']
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)

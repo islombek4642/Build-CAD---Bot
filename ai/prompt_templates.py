@@ -1,45 +1,38 @@
 SCHEMA_PROMPT = '''
-Convert the user architectural requirements into a strict JSON document matching this schema:
+Convert user architectural requirements into a PLATINUM LEVEL professional CAD JSON.
+The output will be rendered as a high-fidelity blueprint with "uz.archdesign" vertical title block and detailed blocks.
 
+ARCHITECTURAL RULES (PLATINUM STANDARDS):
+1. PACKING: Rooms must be tightly packed with ZERO gaps or overlaps.
+2. HALLS: Main corridors should be 1.2m to 2.0m wide for professional flow.
+3. CONNECTIVITY: Every room MUST connect to a hall/corridor via a door.
+4. STAIRS: For multistory plans, place a 3x2m stairs block in the entrance hall.
+5. WINDOWS: Place on EXTERIOR walls only. Minimum 1.5m width for living rooms.
+6. STYLE: If user says "Modern", use large windows and open-plan kitchen/living layouts.
+
+JSON SCHEMA:
 {
-  "total_area": "number (sq.m, calculate from land_width * land_height)",
-  "land_width": "number (meters)",
-  "land_height": "number (meters)",
-  "floor_count": "integer (default 1)",
+  "total_area": "number",
+  "land_width": "number",
+  "land_height": "number",
+  "floor_count": "integer",
+  "style": "Modern|Classic",
   "rooms": [
     {
-      "name": "string (e.g. 'Master Bedroom')",
-      "type": "string (bedroom|living_room|kitchen|bathroom|other)",
-      "x": "number (bottom-left x coordinate in meters)",
-      "y": "number (bottom-left y coordinate in meters)",
-      "width": "number (room width in meters)",
-      "height": "number (room height in meters)",
-      "separate": "boolean (default false)",
+      "name": "string",
+      "type": "bedroom|living_room|kitchen|bathroom|hall|stairs|office|gym|other",
+      "x": "number", "y": "number", "width": "number", "height": "number",
       "openings": [
-        {
-          "type": "string (door|window)",
-          "wall": "string (north|south|east|west)",
-          "pos": "number (offset from start of wall clockwise, e.g. for north wall it is offset from left corner)"
-        }
+        {"type": "door|window", "wall": "north|south|east|west", "pos": "number"}
       ]
     }
   ],
-  "entrance": "string (north|south|east|west, default south)",
-  "walls_thickness": "number (default 0.3)",
-  "notes": "optional string"
+  "entrance": "north|south|east|west",
+  "walls_thickness": "number"
 }
 
-IMPORTANT: 
-- All rooms must be within [0, land_width] and [0, land_height].
-- Rooms must not overlap significantly.
-- Provide a realistic layout for a functional home.
-- CONSIDER THE FOLLOWING CATEGORIES FROM USER NOTES:
-  1. General Info: Land shape, address impacts (if any), floor area.
-  2. Room Composition: Number of bedrooms/bathrooms, specific room sizes requested, garage, terrace/balcony.
-  3. Style & Design: Minimalism/Classic/National style (reflect in proportions), roof type (note in JSON), materials (note in JSON).
-  4. Budget & Materials: Standard/Premium (reflect in room count/sizes if constrained).
-  5. Technical Requirements: Sunlight orientation (place windows on sunny sides), seismic resistance (functional layout).
-  6. Documents & Regulations: Adhere to land dimensions provided.
-  7. Special Wishes: Open/closed kitchen, panoramic windows (large windows in JSON), smart home hubs.
-Return only valid JSON and nothing else.
+Step 1: Layout the Hall/Stairs first (the skeleton).
+Step 2: Pack specialty rooms around the hall (Bedroom, Living, etc.).
+Step 3: Add Openings (Doors internal, Windows external).
+Step 4: Return JSON only.
 '''

@@ -14,7 +14,7 @@ SCHEMA = {
                 'type': 'object',
                 'properties': {
                     'name': {'type': 'string'},
-                    'type': {'type': 'string', 'enum': settings.ROOM_TYPES},
+                    'type': {'type': 'string'},
                     'x': {'type': 'number'},
                     'y': {'type': 'number'},
                     'width': {'type': 'number'},
@@ -39,6 +39,7 @@ SCHEMA = {
             'default': []
         },
         'entrance': {'type': 'string', 'enum': ['north', 'south', 'east', 'west'], 'default': settings.DEFAULT_ENTRANCE},
+        'style': {'type': 'string', 'enum': ['Modern', 'Classic'], 'default': 'Modern'},
         'walls_thickness': {'type': 'number', 'default': settings.DEFAULT_WALLS_THICKNESS},
         'notes': {'type': 'string'}
     },

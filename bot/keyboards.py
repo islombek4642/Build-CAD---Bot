@@ -12,6 +12,10 @@ def get_main_keyboard(lang='uz'):
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
 
+def get_cancel_keyboard(lang='uz'):
+    keyboard = [[KeyboardButton(text=STRINGS[lang]['btn_cancel'])]]
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True)
+
 def get_language_keyboard():
     keyboard = [
         [

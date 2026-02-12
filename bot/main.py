@@ -25,15 +25,32 @@ async def main():
         return
 
     from aiogram.client.bot import DefaultBotProperties
+    from aiogram.types import BotCommand
+    from bot.strings import STRINGS
+
     bot = Bot(token=token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    
+    # Set Commands Menu
+    commands = [
+        BotCommand(command="start", description=STRINGS['uz']['cmd_start']),
+        BotCommand(command="yordam", description=STRINGS['uz']['cmd_help']),
+    ]
+    await bot.set_my_commands(commands)
+
     dp = Dispatcher(storage=MemoryStorage())
     router = Router()
 
     router.message.register(handlers.start, Command("start"))
+    router.message.register(handlers.show_help, Command("yordam"))
+    router.message.register(handlers.cmd_cancel, Command("cancel"))
+    
+    # Questionnaire Flow
     router.message.register(handlers.process_dims, handlers.Questionnaire.land_dims)
     router.message.register(handlers.process_floors, handlers.Questionnaire.floors)
     router.message.register(handlers.process_rooms, handlers.Questionnaire.rooms)
     router.message.register(handlers.process_notes_and_gen, handlers.Questionnaire.notes)
+    
+    # Generic Messages
     router.message.register(handlers.handle_message)
     dp.include_router(router)
 
